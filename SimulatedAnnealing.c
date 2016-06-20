@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include <time.h>
+#include <string.h> 
 #define MAX_N 10000   // 点の数の最大値
 #define INF 100000000 // 無限大の定義
 #define EPSILON 0.00000001 //ε 小さい正の値
