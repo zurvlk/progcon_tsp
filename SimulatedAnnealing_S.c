@@ -122,14 +122,14 @@ void write_tour_data(char *filename, int n, int tour[MAX_N]){
 
 int main(int argc, char *argv[]) {
     int  n, i = 0;
-    int times = 1000;
+    int times = 50;
     struct point  p[MAX_N];   // 各点の座標を表す配列
     int tour[MAX_N];   // 巡回路を表現する配列
 
     double
-        initialT = 1000.0,
+        initialT = 10000.0,
         finalT = 0.1,
-        coolingRate = 0.95,
+        coolingRate = 0.9,
         min = 0;
 
     if(argc != 2) {
@@ -146,7 +146,7 @@ int main(int argc, char *argv[]) {
     write_tour_data("tour1.dat",n,tour);
     // 巡回路長を画面に出力
     printf("%lf\n",tour_length(p,n,tour));
-    for(i = 0; i < 10;i++){
+    for(i = 0; i < times;i++){
         buildRoute(p,n,tour);
         sa(p, n, tour, times, initialT, finalT, coolingRate);
         printf("%lf\n",tour_length(p,n,tour));

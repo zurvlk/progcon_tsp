@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include <time.h>
-#include <string.h> 
+#include <string.h>
 #define MAX_N 10000   // 点の数の最大値
 #define INF 100000000 // 無限大の定義
 #define EPSILON 0.00000001 //ε 小さい正の値
@@ -123,13 +123,13 @@ void write_tour_data(char *filename, int n, int tour[MAX_N]){
 
 int main(int argc, char *argv[]) {
     int  n, i, j;
-    int times = 5;
+    int times = 50;
     struct point  p[MAX_N];   // 各点の座標を表す配列
     int tour[MAX_N];   // 巡回路を表現する配列
 
     double
-        initialT = 1000.0,
-        finalT = 0.1,
+        initialT = 100.0,
+        finalT = 0.8,
         coolingRate = 0.95,
         initalRoute,
         min = 0;
