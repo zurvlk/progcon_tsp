@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <string.h>
 #include <time.h>
 #define MAX_N 10000   // 点の数の最大値
 #define INF 100000000 // 無限大の定義
@@ -145,7 +146,7 @@ int main(int argc, char *argv[]) {
     write_tour_data("tour1.dat",n,tour);
     // 巡回路長を画面に出力
     printf("%lf\n",tour_length(p,n,tour));
-    for(i = 0; i < 20;i++){
+    for(i = 0; i < 10;i++){
         buildRoute(p,n,tour);
         sa(p, n, tour, times, initialT, finalT, coolingRate);
         printf("%lf\n",tour_length(p,n,tour));
