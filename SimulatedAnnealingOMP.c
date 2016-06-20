@@ -3,6 +3,7 @@
 #include <math.h>
 #include <string.h>
 #include <time.h>
+#include <omp.h>
 #define MAX_N 10000   // 点の数の最大値
 #define INF 100000000 // 無限大の定義
 #define EPSILON 0.00000001 //ε 小さい正の値
@@ -26,7 +27,6 @@ double tour_length(struct point p[MAX_N], int n, int tour[MAX_N]) {
 
 int decisionChange(double delta, double t){
     if(delta <= 0) return 1;
-    //if(delta/t >= 1) return 0;
     if(((double)rand() / RAND_MAX) < exp(- delta / t)) return 1;
     return 0;
 }
@@ -121,23 +121,22 @@ void write_tour_data(char *filename, int n, int tour[MAX_N]){
 }
 
 int main(int argc, char *argv[]) {
-    int  n, i = 0;
-    int times = 50;
+    int
+        n, i = 0,
+        times = 50;
     struct point  p[MAX_N];   // 各点の座標を表す配列
-    int tour[MAX_N];   // 巡回路を表現する配列
-
+    int tour[MAX_N];
     double
         initialT = 1000.0,
         finalT = 0.01,
         coolingRate = 0.995,
         min = 0;
 
+
     if(argc != 2) {
         fprintf(stderr,"Usage: %s <tsp_filename>\n",argv[0]);
         exit(EXIT_FAILURE);
     }
-
-
     //乱数種生成
     srand((unsigned)time(NULL));
     // 点の数と各点の座標を1番目のコマンドライン引数で指定されたファイルから読み込む
@@ -148,12 +147,14 @@ int main(int argc, char *argv[]) {
     write_tour_data("tour1.dat",n,tour);
     // 巡回路長を画面に出力
     printf("%lf\n",tour_length(p,n,tour));
+
+    #pragma omp parallel for private(tour)
     for(i = 0; i < times;i++){
         buildRoute(p,n,tour);
         sa(p, n, tour, times, initialT, finalT, coolingRate);
-        printf("%lf\n",tour_length(p,n,tour));
+        printf("%lf\n",i + 1, tour_length(p,n,tour));
         if(!min || ( tour_length(p,n,tour) < min)){
-            write_tour_data("tour2.dat",n,tour);
+            write_tour_data("result_omp.dat",n,tour);
             min = tour_length(p,n,tour);
         }
     }
