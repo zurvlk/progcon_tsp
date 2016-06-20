@@ -25,7 +25,7 @@ double tour_length(struct point p[MAX_N], int n, int tour[MAX_N]) {
 
 int decisionChange(double delta, double t){
     if(delta <= 0) return 1;
-    if(delta/t >= 1) return 0;
+    //if(delta/t >= 1) return 0;
     if(((double)rand() / RAND_MAX) < exp(- delta / t)) return 1;
     return 0;
 }
@@ -57,59 +57,6 @@ void read_tsp_data(char *filename, struct point p[MAX_N],int *np) {
     fclose(fp);
 }
 
-void nn(struct point p[MAX_N], int n, int tour[MAX_N]){
-    FILE *fp;
-    int i,j,nearest;
-    int visited[MAX_N]; // 都市iが訪問済みならば1そうでなければ0
-    int min;
-
-    for(i=0;i<n;i++) visited[i]=0; // 最初は全都市は未訪問
-    tour[0]=0;         // 最初に訪問する都市は 0
-    visited[0]=1;      // 都市0は訪問済み
-
-    for(i=0;i<n-1;i++) {
-        //最後に訪問した都市tour[i]から最短距離にある未訪問都市nearestを
-        //見つける
-        min = INF;
-        for(j=1;j<n;j++) {
-            if(!visited[j] && dist(p[tour[i]],p[j])<min){
-                nearest=j;      //都市tour[i]から暫定的に最短距離にある未訪問都市をnearestとする
-                min = dist(p[tour[i]],p[j]); // その暫定最短距離をminとする
-            }
-        }
-        tour[i+1]=nearest; // i+1 番目に訪問する都市を nearest にして,
-        visited[nearest]=1;// nearest を訪問済みとする.
-    }
-
-}
-
-void TwoOpt(struct point p[MAX_N], int n, int tour[MAX_N]){
-    struct point a,b,c,d;
-    int i,j,k,l,g,h,success;
-
-    //課題(ここから)
-    success = 0;
-    for(i = 0; i <= n - 3; i++){
-        j = i + 1;
-        for(k = i + 2; k <= n - 1; k++){
-            l = (k + 1) % n;
-            a = p[tour[i]]; b = p[tour[j]];
-            c = p[tour[k]]; d = p[tour[l]];
-
-            if(dist(a, b) + dist(c, d) - dist(a, c) - dist(b, d) > EPSILON){
-                success = 1;
-                g = j; h = k;
-                while (g < h) {
-                    SWAP(tour[g], tour[h]);
-                    g++;
-                    h--;
-                }
-                if(success) return;
-            }
-        }
-    }
-}
-
 void sa(struct point p[MAX_N],
         int n, int tour[MAX_N],
         int times,
@@ -118,28 +65,32 @@ void sa(struct point p[MAX_N],
         double coolingRate){
 
     int
-        randomIndex1,
-        randomIndex2,
-        i,j,k,l,g,h,success;
+        i, j, k, l, g, h;
     double
         t,
         currentTotalDistance,
         newTotalDistance;
-    struct point a,b,c,d;
+    struct point a, b, c, d;
     currentTotalDistance = tour_length(p,n,tour);
-
     for(t = initialT; t > finalT; t *= coolingRate){
-        for(i = 0; i < times; i++){
-            randomIndex1 = rand() % n;
-            randomIndex2 = rand() % n;
+        for(i = 0; i <= n - 3; i++){
+            j = i + 1;
+            for(k = i + 2; k <= n - 1; k++){
+                l = (k + 1) % n;
+                a = p[tour[i]]; b = p[tour[j]];
+                c = p[tour[k]]; d = p[tour[l]];
 
-            SWAP(tour[randomIndex1], tour[randomIndex2]);
-            newTotalDistance = tour_length(p,n,tour);
-
-            if(decisionChange(newTotalDistance - currentTotalDistance, t))
-                currentTotalDistance = newTotalDistance;
-            else
-                SWAP(tour[randomIndex1], tour[randomIndex2]);
+                newTotalDistance = currentTotalDistance - (dist(a, b) + dist(c, d) - dist(a, c) - dist(b, d));
+                if(decisionChange(newTotalDistance - currentTotalDistance, t)){
+                    g = j; h = k;
+                    while (g < h) {
+                        SWAP(tour[g], tour[h]);
+                        g++;
+                        h--;
+                    }
+                    currentTotalDistance = newTotalDistance;
+                }
+            }
         }
     }
 }
@@ -194,7 +145,7 @@ int main(int argc, char *argv[]) {
     write_tour_data("tour1.dat",n,tour);
     // 巡回路長を画面に出力
     printf("%lf\n",tour_length(p,n,tour));
-    for(i = 0; i < 30;i++){
+    for(i = 0; i < 50;i++){
         buildRoute(p,n,tour);
         sa(p, n, tour, times, initialT, finalT, coolingRate);
         printf("%lf\n",tour_length(p,n,tour));
@@ -203,9 +154,6 @@ int main(int argc, char *argv[]) {
             min = tour_length(p,n,tour);
         }
     }
-
-
-
     // 巡回路長を画面に出力
     printf("%lf\n",min);
 
