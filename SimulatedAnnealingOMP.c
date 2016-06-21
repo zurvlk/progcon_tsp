@@ -96,11 +96,27 @@ void sa(struct point p[MAX_N],
     }
 }
 
-void buildRoute(struct point p[MAX_N], int n, int tour[MAX_N]){
+void buildRoute(int n, int tour[MAX_N]){
     int i;
     for(i = 0; i < n; i++){
         tour[i] = i;
     }
+}
+
+void buildRandRoute(int n, int tour[MAX_N]){
+    int i, randKey, numRand;
+    int temp[MAX_N];
+    buildRoute(n,temp);
+    numRand = n;
+
+    for(i = 0; i < n; i++){
+        randKey = rand() % numRand;
+        tour[i] = temp[randKey];
+        temp[randKey] = temp[numRand - 1];
+
+        --numRand;
+    }
+
 }
 
 void write_tour_data(char *filename, int n, int tour[MAX_N]){
@@ -123,6 +139,7 @@ void write_tour_data(char *filename, int n, int tour[MAX_N]){
 int main(int argc, char *argv[]) {
     int
         n, i = 0,
+        count = 0,
         times = 50;
     struct point  p[MAX_N];   // 各点の座標を表す配列
     int tour[MAX_N];
@@ -142,7 +159,7 @@ int main(int argc, char *argv[]) {
     // 点の数と各点の座標を1番目のコマンドライン引数で指定されたファイルから読み込む
     read_tsp_data(argv[1],p, &n);
     // 最近近傍法による巡回路構築
-    buildRoute(p,n,tour);
+    buildRandRoute(n,tour);
     // 巡回路をテキストファイルとして出力
     write_tour_data("tour1.dat",n,tour);
     // 巡回路長を画面に出力
@@ -150,13 +167,15 @@ int main(int argc, char *argv[]) {
 
     #pragma omp parallel for private(tour)
     for(i = 0; i < times;i++){
-        buildRoute(p,n,tour);
+        buildRandRoute(n,tour);
         sa(p, n, tour, times, initialT, finalT, coolingRate);
-        printf("%lf\n",i + 1, tour_length(p,n,tour));
         if(!min || ( tour_length(p,n,tour) < min)){
             write_tour_data("result_omp.dat",n,tour);
             min = tour_length(p,n,tour);
+            putchar('*');
         }
+        count++;
+        printf("%d : %lf\n", count,tour_length(p,n,tour));
     }
     // 巡回路長を画面に出力
     printf("%lf\n",min);
