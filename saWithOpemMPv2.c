@@ -59,14 +59,15 @@ void read_tsp_data(char *filename, struct point p[MAX_N],int *np) {
 
     fclose(fp);
 }
-void ThreeOpt(struct point p[MAX_N], int n, int tour[MAX_N]){
+double ThreeOpt(struct point p[MAX_N], int n, int tour[MAX_N]){
     struct point a, b, c, d, e, f;
     int i, j, k, l, v, w, z, success,
         g1, g2, g3, h1, h2, h3, num;
-	double dmax, max, len[7];
+	double dmax, max, initDistance, len[7];
 
 
 	success = 1;
+    initDistance = tour_length(p,n,tour);
 
 	while(success != 0){
 		success = 0;
@@ -165,6 +166,37 @@ void ThreeOpt(struct point p[MAX_N], int n, int tour[MAX_N]){
 			g3++; h3--;
 		}
 	}
+    return initDistance - tour_length(p,n,tour);
+}
+
+double TwoOpt(struct point p[MAX_N], int n, int tour[MAX_N]){
+    struct point a, b, c, d;
+    int i, j, k, l, g, h, success, count;
+    double initDistance;
+    initDistance = tour_length(p,n,tour);
+    do{
+        count= 0;
+        for(i = 0; i <= n - 3; i++){
+            j = i + 1;
+            for(k = i + 2; k <= n - 1; k++){
+                l = (k + 1) % n;
+                a = p[tour[i]]; b = p[tour[j]];
+                c = p[tour[k]]; d = p[tour[l]];
+
+                if(dist(a, b) + dist(c, d) - dist(a, c) - dist(b, d) > EPSILON){
+                    g = j; h = k;
+                    while (g < h) {
+                        SWAP(tour[g], tour[h]);
+                        g++;
+                        h--;
+                    }
+                    count++;
+                }
+            }
+        }
+    }while(count > 0); //更新が行われなかった場合終了
+
+    return initDistance - tour_length(p,n,tour);
 }
 
 void sa(struct point p[MAX_N],
@@ -292,7 +324,7 @@ int main(int argc, char *argv[]) {
         buildRandRoute(n,tour);
 
         sa(p, n, tour, times, initialT, finalT, coolingRate);
-        ThreeOpt(p, n, tour);
+        while (TwoOpt(p, n, tour) != 0 && ThreeOpt(p, n, tour) != 0);
 
         count++;
         if(count < 10) putchar('0');
