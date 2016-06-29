@@ -199,6 +199,56 @@ double TwoOpt(struct point p[MAX_N], int n, int tour[MAX_N]){
     return initDistance - tour_length(p,n,tour);
 }
 
+double OrOpt(struct point p[MAX_N], int n, int tour[MAX_N]){
+    struct point a, b, c, d, e;
+    int i, j, k, l, m, g, h, success, end,
+        a0 = -1, b0 = -1, c0 = -1, d0 = -1, e0 = -1;
+	double len[2], max, pastlen, newlen, initDistance;
+
+    initDistance = tour_length(p, n, tour);
+	success = 1;
+	while(success){
+		success = 0;
+
+		end = 1;
+		while(end){
+			end = 0;
+			max = EPSILON;
+			for(i = 0; i <= n - 4; i++){
+				j = i + 1;
+				for(k = i + 3; k <= n - 2; k++){
+					l = (k + 1)%n;
+					m = (k - 1)%n;
+
+					a = p[tour[i]]; b = p[tour[j]];
+					c = p[tour[k]]; d = p[tour[l]];
+					e = p[tour[m]];
+
+					len[0] = dist(a, b) + dist(e, c) + dist(c, d) - dist(a, c) - dist(c, b) - dist(e, d);
+					if(len[0] > EPSILON && i != l && j != l){
+						success = 1;
+						end = 1;
+						if(len[0] > max){
+							max = len[0];
+							a0 = i; b0 = j; c0 = k; d0 = l; e0 = m;
+						}
+					}
+				}
+			}
+			pastlen = tour_length(p, n, tour);
+			if(end == 1){
+				while(c0 > b0){
+					SWAP(tour[c0],tour[c0 - 1]);
+					c0--;
+				}
+			}
+
+		}
+	}
+
+    return initDistance - tour_length(p,n,tour);
+}
+
 void sa(struct point p[MAX_N],
         int n, int tour[MAX_N],
         int times,
@@ -268,7 +318,6 @@ void buildRandRoute(int n, int tour[MAX_N]){
 
         --numRand;
     }
-
 }
 
 void write_tour_data(char *filename, int n, int tour[MAX_N]){
@@ -292,13 +341,14 @@ int main(int argc, char *argv[]) {
     int
         n, i = 0,
         count = 0,
-        times = 30;
+        cores,
+        times = 10;
     struct point  p[MAX_N];   // 各点の座標を表す配列
     int tour[MAX_N];
     double
         initialT = 1000.0,
-        finalT = 0.01,
-        coolingRate = 0.995,
+        finalT = 0.1,
+        coolingRate = 0.99,
         min = 0;
 
 
@@ -315,16 +365,18 @@ int main(int argc, char *argv[]) {
     // 巡回路をテキストファイルとして出力
     write_tour_data("tour1.dat",n,tour);
     // 巡回路長を画面に出力
-    printf("%lf\n",tour_length(p,n,tour));
+    //
+    cores = omp_get_max_threads();
+    printf("This program use %d cores\n",cores);
 
 
     #pragma omp parallel for private(tour)
 
-    for(i = 0; i < times;i++){
+    for(i = 0; i < times * cores;i++){
         buildRandRoute(n,tour);
 
         sa(p, n, tour, times, initialT, finalT, coolingRate);
-        while (TwoOpt(p, n, tour) != 0 && ThreeOpt(p, n, tour) != 0);
+        while ((TwoOpt(p, n, tour) != 0 && ThreeOpt(p, n, tour) != 0) && OrOpt(p, n, tour) != 0);
 
         count++;
         if(count < 10) putchar('0');
@@ -338,7 +390,7 @@ int main(int argc, char *argv[]) {
         putchar('\n');
     }
     // 巡回路長を画面に出力
-    printf("%lf\n",min);
+    printf("Result: %s --> %lf\n", argv[1], min);
 
     exit(EXIT_SUCCESS);
 }
