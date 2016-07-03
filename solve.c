@@ -82,6 +82,32 @@ int chkPrec(int j, int m, int prec[MAX_N],int visited[MAX_N]){
     return 1;
 }
 
+void chkRoute(int n, int tour[MAX_N], int m, int prec[MAX_N]){
+    int i,
+        errCount = 0,
+        precCount = 0,
+        visited[n];
+
+    for(i = 0; i < n; i++){
+        if(tour[i] == prec[precCount]) precCount++;
+        visited[tour[i]] = 1;
+    }
+
+    if(precCount != m){
+        printf("Error from precs\n");
+        errCount++;
+    }
+
+    for(i = 0; i < n; i++){
+         if(!visited[i]){
+             printf("%d is not visited\n",i);
+             errCount++;
+         }
+     }
+     putchar('\n');
+
+}
+
 void nn(struct point p[MAX_N],
         int n,
         int tour[MAX_N],
@@ -94,15 +120,14 @@ void nn(struct point p[MAX_N],
     double min;
 
 
-    for(i = 0;i < n; i++) visited[i] = 0; // 最初は全都市は未訪問
+    for(i = 0; i < n; i++) visited[i] = 0; // 最初は全都市は未訪問
     tour[0] = prec[0];
     visited[prec[0]] = 1;      // 都市0は訪問済み
     printf("1   start : %d\n", prec[0]);
 
-
     for(i = 0; i < n - 1; i++) {
         min = 0;
-        for(j = 0; j <= n; j++){
+        for(j = 0; j < n; j++){
             if(!visited[j]  && (min == 0 || dist(p[tour[i]], p[j]) < min)){
                 //デバッグ用
                 if(chkPrec(j, m, prec, visited)){
@@ -111,13 +136,18 @@ void nn(struct point p[MAX_N],
                 }
             }
         }
-        printf("\n%d nearest : %d \n", i + 2, nearest);
+        printf("\n%d nearest : %d \n\n", i + 2, nearest);
         //デバッグ用
         tour[i + 1] = nearest; // i+1 番目に訪問する都市を nearest にして,
         visited[nearest] = 1;// nearest を訪問済みとする.
     }
+    for(i = 0; i < n; i++) printf("%d ",tour[i]);
+    putchar('\n');
+    chkRoute(n, tour, m, prec);
 
 }
+
+
 
 void write_tour_data(char *filename, int n, int tour[MAX_N]){
     FILE *fp;
@@ -151,6 +181,8 @@ int main(int argc, char *argv[]) {
 
     // 点の数と各点の座標を1番目のコマンドライン引数で指定されたファイルから読み込む
     read_tsp_data(argv[1],p,&n,prec,&m);
+
+
 
     //順序制約の確認
 
